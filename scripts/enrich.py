@@ -14,6 +14,8 @@ NETFLIX = {"lat": 37.2596, "lon": -121.9627, "name": "Netflix Los Gatos", "addre
 PALANTIR_ADDRESS = "100 Hamilton Avenue, Palo Alto, CA"
 BBOX = "37.17,-122.25,37.47,-121.82"
 SPEEDS = [16, 20, 25]  # km/h: 9.9, 12.4, and 15.5 mph
+BASE_SPEED = 20  # Routed once at this speed. The other speeds scale from it.
+MIN_RENT = 1800  # A 2-bedroom below this here is a bad listing.
 SKIP_GYM = re.compile(r"yoga|pilates|barre|dance|orangetheory|f45|boxing|martial|karate|jiu|taekwon|physical therapy|rehab|massage|cycle|spin|swim|tennis|golf|climb|bouldering|personal train|dojo|stretch|lagree|aquatic|mat room|active age|studio|wellness|senior|kids|gymnastics", re.I)
 SKIP_TRAIL = re.compile(r"do not enter|connector|access|bmx|spur|cutoff|jump", re.I)
 
@@ -152,6 +154,25 @@ def get_trails():
     return out
 
 
+def load_requirements():
+    try:
+        with open(os.path.join(ROOT, "requirements.json")) as f:
+            return json.load(f).get("items", [])
+    except Exception:
+        return []
+
+
+def place_key(x):
+    """One place per street address. Units in one building merge. Reposted ads merge."""
+    a = (x.get("address") or "").split(",")[0].lower()
+    a = re.sub(r"\s+(unit|apt|#|ste|suite)\b.*|\s+#.*", "", a).strip()
+    if a:
+        return f'{a}|{(x.get("city") or "").lower()}'
+    if x.get("lat") is not None and x.get("lon") is not None:
+        return f'{round(float(x["lat"]), 3)},{round(float(x["lon"]), 3)},{x["rent_monthly"]}'
+    return x.get("source_url") or x.get("name")
+
+
 def gym_quality(g, known):
     for k in known:
         if k["match"].lower() not in g["name"].lower():
@@ -179,7 +200,9 @@ def main():
     pal = geocode(PALANTIR_ADDRESS, cache)
     net = (NETFLIX["lat"], NETFLIX["lon"])
 
-    merged = {}
+    reqs = load_requirements()
+    max_rent = next((r.get("value") for r in reqs if r.get("kind") == "max_rent"), None) or 1e9
+    merged, odd = {}, 0
     for path in sorted(glob.glob(os.path.join(ROOT, "listings", "*.json"))):
         try:
             with open(path) as f:
@@ -190,8 +213,30 @@ def main():
         for x in rows if isinstance(rows, list) else []:
             if not isinstance(x, dict) or not isinstance(x.get("rent_monthly"), (int, float)):
                 continue
-            k = x.get("source_url") or x.get("address") or x.get("name")
-            merged[k] = {**merged.get(k, {}), **{a: b for a, b in x.items() if b is not None}}
+            rent = x.get("rent_low", x["rent_monthly"])
+            if x.get("open_2bed") is False or rent > max_rent or (x.get("beds") or 0) < 2:
+                continue
+            if rent < MIN_RENT:
+                odd += 1
+                continue
+            k = place_key(x)
+            old = merged.get(k)
+            if not old:
+                merged[k] = dict(x)
+            elif old.get("open_2bed"):
+                continue  # A hand-checked row beats a feed row for the same address.
+            elif x.get("open_2bed"):
+                merged[k] = dict(x)
+            else:
+                low = min(old.get("rent_low", old["rent_monthly"]), rent)
+                high = max(old["rent_monthly"], x["rent_monthly"])
+                keep = dict(x) if rent <= old.get("rent_low", old["rent_monthly"]) else dict(old)
+                keep["units"] = old.get("units", 1) + 1
+                keep["rent_monthly"] = high
+                if low != high:
+                    keep["rent_low"] = low
+                merged[k] = keep
+    print(len(merged), "places after merging,", odd, "dropped for a bad price")
 
     places = []
     for x in merged.values():
@@ -207,11 +252,11 @@ def main():
             continue
         pt = tuple(pt)
         exact = bool(x.get("address")) or bool(x.get("location_exact"))
-        bike = {str(s): route(pt, net, "bicycle", cache, s) for s in SPEEDS}
-        bike_p = route(pt, pal, "bicycle", cache, 20)
+        base = route(pt, net, "bicycle", cache, BASE_SPEED)
+        bike = {str(s): ({"min": round(base["min"] * BASE_SPEED / s), "mi": base["mi"]} if base else None) for s in SPEEDS}
         drive_p = route(pt, pal, "auto", cache)
         drive_n = route(pt, net, "auto", cache)
-        corridor = [tuple(p) for r in (bike["20"], drive_p) if r for p in r["shape"]]
+        corridor = [tuple(p) for r in (base, drive_p) if r for p in r["shape"]]
         near = []
         for g in gyms:
             d = miles(pt, (g["lat"], g["lon"]))
@@ -224,14 +269,14 @@ def main():
         tr = sorted(({"name": t["name"], "miles": t["miles"], "mi": round(min(miles(pt, p) for p in t["pts"]), 1)} for t in trails), key=lambda t: t["mi"])[:2]
         x.update({
             "lat": round(pt[0], 5), "lon": round(pt[1], 5), "location_exact": exact,
-            "bike_netflix": {s: ({"min": r["min"], "mi": r["mi"]} if r else None) for s, r in bike.items()},
-            "bike_palantir": {"min": bike_p["min"], "mi": bike_p["mi"]} if bike_p else None,
+            "bike_netflix": bike,
             "drive_palantir": {"min": drive_p["min"], "mi": drive_p["mi"]} if drive_p else None,
             "drive_netflix": {"min": drive_n["min"], "mi": drive_n["mi"]} if drive_n else None,
             "gyms": near[:4], "trails": tr,
         })
         places.append(x)
-        save("cache.json", cache)
+        if len(places) % 10 == 0:
+            save("cache.json", cache)
 
     rings = load("rings.json", {})
     for s in SPEEDS:

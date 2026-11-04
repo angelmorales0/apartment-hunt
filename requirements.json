@@ -3,6 +3,7 @@
   "notes": "Search criteria only. Places must meet each must item.",
   "items": [
     {"id": "rent", "list": "shared", "kind": "max_rent", "value": 4500, "must": true, "label": "Total rent is $4,500 or less, cheapest first"},
+    {"id": "open", "list": "shared", "kind": "open_now", "value": true, "must": true, "label": "A 2-bedroom is open to apply for right now"},
     {"id": "beds", "list": "shared", "kind": "min_beds", "value": 2, "must": true, "label": "2 bedrooms or more"},
     {"id": "bike", "list": "netflix", "kind": "max_bike_netflix_min", "value": 60, "must": false, "label": "1 hour bike ride to Netflix Los Gatos is preferred. Never filter places out by bike time"},
     {"id": "palantir", "list": "palantir", "kind": "max_commute_palantir_min", "value": null, "must": true, "label": "Close to Palantir, 100 Hamilton Ave. Limit not set yet"},

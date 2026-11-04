@@ -27,6 +27,10 @@ The site applies these kinds by itself:
 
 Any other `kind` shows in the list. House Hunter must use it as a search filter when it hunts.
 
+## Open units
+
+The site only shows places with an open 2-bedroom. Set `open_2bed` to `false` on a listing to remove it. A row with no `open_2bed` counts as an active listing. Rows with a text `open_2bed` were checked by hand and beat feed rows for the same address. `data/watch_list.json` holds places with no open 2-bedroom on the last check.
+
 ## Listing file
 
 A JSON array of objects. See `listings/` for examples. Use `null` for an unknown fact. Do not guess.

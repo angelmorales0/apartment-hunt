@@ -2,6 +2,7 @@ const $ = id => document.getElementById(id);
 const money = n => "$" + Math.round(n).toLocaleString("en-US");
 const short = n => n >= 1000 ? "$" + (n / 1000).toFixed(n % 100 ? 2 : 1).replace(/0$/, "") + "k" : "$" + n;
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const show = v => v === true ? "Yes" : v;
 const safeUrl = u => /^https:\/\//.test(u || "") ? u : null;
 const low = p => p.rent_low ?? p.rent_monthly;
 const priceBand = n => n <= 3300 ? "p1" : n <= 3700 ? "p2" : n <= 4100 ? "p3" : "p4";
@@ -10,7 +11,7 @@ let DATA, REQ, RINGS, map, active = null;
 const pins = new Map();
 const ringLayers = {};
 
-const KNOWN = new Set(["max_rent", "min_beds", "max_bike_netflix_min", "max_commute_palantir_min", "gym_near", "gym_equipment", "trail_near"]);
+const KNOWN = new Set(["open_now", "max_rent", "min_beds", "max_bike_netflix_min", "max_commute_palantir_min", "gym_near", "gym_equipment", "trail_near"]);
 function req(kind) { return REQ.items.find(r => r.kind === kind && r.value !== null && r.value !== undefined); }
 
 function bestGym(p) {
@@ -69,12 +70,12 @@ function card({ p, e }, i) {
     <div class="rows">
       <div><span>Netflix</span><span>${netflixText(p)}${b && req("max_bike_netflix_min") && b.min > req("max_bike_netflix_min").value ? ". Bike is over your 1 hour goal" : ""}</span></div>
       <div><span>Palantir</span><span>${palantirText(p)}</span></div>
+      <div><span>Open</span><span>${esc(p.open_2bed || "Active listing")}${p.units > 1 ? `, ${p.units} listings here` : ""}${p.available_date ? `, from ${esc(String(p.available_date).slice(0, 10))}` : ""}</span></div>
       <div><span>Size</span><span>${esc(size)}</span></div>
       <div><span>Gym</span><span>${gymText}</span></div>
-      ${p.building_gym ? `<div><span>In building</span><span>Gym: ${esc(p.building_gym)}</span></div>` : ""}
+      ${p.building_gym ? `<div><span>In building</span><span>Gym: ${esc(show(p.building_gym))}</span></div>` : ""}
       <div><span>Trail</span><span>${t ? `${t.mi} mi, ${esc(t.name)}` : "None found"}</span></div>
-      ${p.laundry ? `<div><span>Laundry</span><span>${esc(p.laundry)}</span></div>` : ""}
-      ${p.available_date ? `<div><span>Open</span><span>${esc(p.available_date)}</span></div>` : ""}
+      ${p.laundry ? `<div><span>Laundry</span><span>${esc(show(p.laundry))}</span></div>` : ""}
     </div>
     ${p.amenities?.length ? `<div class="nice">${p.amenities.map(esc).join(" · ")}</div>` : ""}
     ${p.rent_note ? `<div class="nice">${esc(p.rent_note)}</div>` : ""}
