@@ -236,5 +236,27 @@
 "source_url": "https://www.furnishedfinder.com/property/885586_1",
 "seen_on": "2026-11-04",
 "open_2bed": "Listing active on Furnished Finder"
+},
+{
+"name": "El Portal",
+"address": "2065 California St, Mountain View, CA",
+"city": "Mountain View",
+"rent_monthly": 3450,
+"beds": 2,
+"baths": 2,
+"sqft": "1,125",
+"laundry": "Shared laundry room",
+"amenities": [
+"Heated pool",
+"Fitness center"
+],
+"building_gym": "Fitness center",
+"available_date": "2026-11-20",
+"open_2bed": "1 floor plan open",
+"website": "https://www.elportalmv.com/",
+"source_site": "Rent.com",
+"source_url": "https://www.rent.com/apartment/el-portal-apartments-mountain-view-ca-lc5930007",
+"rent_note": "$1,725 deposit.",
+"seen_on": "2026-11-04"
 }
 ]
