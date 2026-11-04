@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bay Area Apartment Hunt</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>Bay Area Apartment Hunt</h1>
+    <p id="updated" class="sub">Loading places</p>
+  </div>
+  <div class="counts" id="counts"></div>
+</header>
+<main class="layout">
+  <section class="mapwrap" aria-label="Map of apartments">
+    <div id="map"></div>
+    <div class="maptools">
+      <label><input id="ringNetflix" type="checkbox" checked> <span class="key k-net"></span>Netflix bike limit</label>
+      <label><input id="ringPalantir" type="checkbox"> <span class="key k-pal"></span>20 min drive to Palantir</label>
+    </div>
+  </section>
+  <aside class="side">
+    <section class="controls" aria-label="Filters">
+      <div class="field">
+        <label for="speed">Bike speed</label>
+        <select id="speed">
+          <option value="16">Easy, 9.9 mph</option>
+          <option value="20" selected>Steady, 12.4 mph</option>
+          <option value="25">Fast, 15.5 mph</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="type">Type</label>
+        <select id="type">
+          <option value="all">All</option>
+          <option value="lease">Lease</option>
+          <option value="furnished">Furnished</option>
+        </select>
+      </div>
+      <label class="check"><input id="nearMiss" type="checkbox"> Show near misses</label>
+    </section>
+    <details class="reqs" id="reqBox">
+      <summary>Requirements <span id="reqCount"></span></summary>
+      <div id="reqList"></div>
+      <p class="hint">Tell House Hunter to change these.</p>
+    </details>
+    <div id="list" class="list"></div>
+  </aside>
+</main>
+<footer class="foot">
+  <p>Ride and drive times come from OpenStreetMap routes. They do not include lights or traffic. Prices marked "Your notes" are not checked yet.</p>
+  <p>Routing by Valhalla on FOSSGIS servers. Map data and tiles &copy; OpenStreetMap contributors.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

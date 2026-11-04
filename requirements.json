@@ -1,0 +1,13 @@
+{
+  "updated": "2026-11-04",
+  "notes": "Search criteria only. Places must meet each must item.",
+  "items": [
+    {"id": "rent", "list": "shared", "kind": "max_rent", "value": 4500, "must": true, "label": "Total rent is $4,500 or less, cheapest first"},
+    {"id": "beds", "list": "shared", "kind": "min_beds", "value": 2, "must": true, "label": "2 bedrooms or more"},
+    {"id": "bike", "list": "netflix", "kind": "max_bike_netflix_min", "value": 60, "must": true, "label": "1 hour bike ride or less to Netflix Los Gatos"},
+    {"id": "palantir", "list": "palantir", "kind": "max_commute_palantir_min", "value": null, "must": true, "label": "Close to Palantir, 100 Hamilton Ave. Limit not set yet"},
+    {"id": "gym", "list": "shared", "kind": "gym_near", "value": 1.5, "must": true, "label": "Gym within 1.5 miles, or on the way to work"},
+    {"id": "equip", "list": "shared", "kind": "gym_equipment", "value": true, "must": true, "label": "Gym has machines, barbells, and dumbbells"},
+    {"id": "trail", "list": "shared", "kind": "trail_near", "value": 3, "must": false, "label": "Running trail within 3 miles, if possible"}
+  ]
+}
