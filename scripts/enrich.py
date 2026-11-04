@@ -164,10 +164,10 @@ def load_requirements():
 
 def place_key(x):
     """One place per street address. Units in one building merge. Reposted ads merge."""
-    a = (x.get("address") or "").split(",")[0].lower()
-    a = re.sub(r"\s+(unit|apt|#|ste|suite)\b.*|\s+#.*", "", a).strip()
+    parts = [p.strip().lower() for p in (x.get("address") or "").split(",")]
+    a = re.sub(r"\s+(unit|apt|#|ste|suite)\b.*|\s+#.*", "", parts[0]).strip()
     if a:
-        return f'{a}|{(x.get("city") or "").lower()}'
+        return f'{a}|{(x.get("city") or (parts[1] if len(parts) > 1 else "")).lower()}'
     if x.get("lat") is not None and x.get("lon") is not None:
         return f'{round(float(x["lat"]), 3)},{round(float(x["lon"]), 3)},{x["rent_monthly"]}'
     return x.get("source_url") or x.get("name")
@@ -203,6 +203,7 @@ def main():
     reqs = load_requirements()
     max_rent = next((r.get("value") for r in reqs if r.get("kind") == "max_rent"), None) or 1e9
     merged, odd = {}, 0
+    closed = {place_key(w) for w in load("watch_list.json", [])}
     for path in sorted(glob.glob(os.path.join(ROOT, "listings", "*.json"))):
         try:
             with open(path) as f:
@@ -220,6 +221,8 @@ def main():
                 odd += 1
                 continue
             k = place_key(x)
+            if k in closed:
+                continue  # Last hand check found no open 2-bedroom here.
             old = merged.get(k)
             if not old:
                 merged[k] = dict(x)
