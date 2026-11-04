@@ -1,6 +1,7 @@
 [
-  {"match": "Boss Barbell", "equipment": "confirmed", "note": "Powerlifting gym with cages and deadlift platforms"},
-  {"match": "24 Hour Fitness", "near": [37.39, -122.08], "radius_mi": 2.5, "equipment": "confirmed", "note": "Lifting rig and free weights"},
-  {"match": "24 Hour Fitness", "equipment": "likely", "note": "Racks are likely, but not confirmed"},
-  {"match": "Equinox", "equipment": "likely", "note": "Reviewers say it has few racks"}
+  {"match": "Boss Barbell", "equipment": "yes", "note": "Powerlifting gym with cages and deadlift platforms"},
+  {"match": "24 Hour Fitness", "equipment": "yes", "note": "Free weights and strength floor"},
+  {"match": "Crunch", "near": [37.345, -122.04], "radius_mi": 4, "equipment": "yes", "note": "Olympic platforms and free weights"},
+  {"match": "Planet Fitness", "equipment": "no", "note": "Machines and dumbbells, but most clubs have no barbell racks"},
+  {"match": "Equinox", "equipment": "yes", "note": "Free weights, with few racks in reviews"}
 ]

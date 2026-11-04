@@ -19,7 +19,7 @@ The site applies these kinds by itself:
 |---|---|
 | `max_rent` | Dollars a month |
 | `min_beds` | Bedrooms |
-| `max_bike_netflix_min` | Minutes |
+| `max_bike_netflix_min` | Minutes. A goal only. It never filters places out when `must` is false |
 | `max_commute_palantir_min` | Minutes by car, or `null` for no limit |
 | `gym_near` | Miles |
 | `gym_equipment` | `true` |

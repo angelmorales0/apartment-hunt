@@ -2,7 +2,7 @@
 :root {
   --bg: #E9EEF0; --panel: #F7F9FA; --ink: #1D272C; --muted: #5C6B73; --line: #CDD6DA;
   --p1: #1B7F4B; --p2: #5E8F1F; --p3: #C9860A; --p4: #C2410C; --on: #FFFFFF;
-  --match: #1B7F4B; --check: #A86B00; --miss: #7A868C;
+  --match: #1B7F4B; --miss: #7A868C;
   --net: #2563C9; --pal: #7A3FB5;
   --display: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
   --body: "Barlow", "Helvetica Neue", Arial, sans-serif;
@@ -10,7 +10,7 @@
 @media (prefers-color-scheme: dark) { :root {
   --bg: #141A1D; --panel: #1B2327; --ink: #E8EDEF; --muted: #9AA8AF; --line: #33414A;
   --p1: #2FA86A; --p2: #86B33A; --p3: #E0A024; --p4: #EE7437; --on: #10161A;
-  --match: #4CC38A; --check: #E0A024; --miss: #9AA8AF;
+  --match: #4CC38A; --miss: #9AA8AF;
   --net: #6C9BEF; --pal: #B48AE6; color-scheme: dark }
   .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) } }
 * { box-sizing: border-box }
@@ -49,13 +49,14 @@ select { width: 100%; padding: 7px; border: 1px solid var(--line); border-radius
 .card:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid var(--net); outline-offset: 1px }
 .head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: start }
 .name { font: 700 19px/1.15 var(--display); overflow-wrap: anywhere }
+.name a { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px }
 .city { font-size: 13.5px; color: var(--muted) }
 .price { font: 700 22px/1 var(--display); text-align: right; font-variant-numeric: tabular-nums }
 .each { font-size: 12.5px; color: var(--muted); text-align: right }
 .status { justify-self: start; font: 600 12.5px var(--body); padding: 1px 7px; border-radius: 3px; border: 1px solid currentColor }
-.status.match { color: var(--match) } .status.check { color: var(--check) } .status.miss { color: var(--miss) }
+.status.match { color: var(--match) } .status.miss { color: var(--miss) }
 .rows { display: grid; gap: 1px; font-size: 14px }
-.rows div { display: grid; grid-template-columns: 62px minmax(0, 1fr); gap: 7px }
+.rows div { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 7px }
 .rows span:first-child { color: var(--muted) }
 .fail { color: var(--p4); font-weight: 600 }
 .nice { color: var(--muted); font-size: 13.5px }

@@ -16,25 +16,21 @@ function req(kind) { return REQ.items.find(r => r.kind === kind && r.value !== n
 function bestGym(p) {
   const near = (req("gym_near") || {}).value ?? 1.5;
   const ok = (p.gyms || []).filter(g => g.mi <= near || g.on_way);
-  return { ok, top: ok.find(g => g.equipment === "confirmed") || ok.find(g => g.equipment === "likely") || ok[0] };
+  return { ok, top: ok.find(g => g.equipment === "yes") || ok.find(g => g.equipment === "unknown") || ok[0] };
 }
 
-// A must-have fails, or stays open when the listing does not prove it.
+// A place passes every must-have, or it is a near miss with the reasons.
 function evaluate(p) {
-  const speed = $("speed").value, fails = [], open = [];
+  const speed = $("speed").value, fails = [];
   const rent = req("max_rent"), beds = req("min_beds"), bike = req("max_bike_netflix_min"), lim = req("max_commute_palantir_min");
   if (rent && low(p) > rent.value) fails.push("Rent over " + money(rent.value));
   if (beds && (p.beds ?? 0) < beds.value) fails.push("Too few bedrooms");
   const b = p.bike_netflix?.[speed];
-  if (bike && b && b.min > bike.value) fails.push(`${b.min} min bike to Netflix`);
-  if (bike && !b) open.push("No bike route found");
+  if (bike?.must && b && b.min > bike.value) fails.push(`${b.min} min bike to Netflix`);
   if (lim && p.drive_palantir && p.drive_palantir.min > lim.value) fails.push(`${p.drive_palantir.min} min to Palantir`);
-  const g = bestGym(p), building = p.building_gym;
-  if (req("gym_near") && !g.ok.length && !building) fails.push("No gym near or on the way");
-  if (req("gym_equipment") && !(g.ok.some(x => x.equipment === "confirmed") || p.gym_equipment === "confirmed")) open.push("Gym equipment");
-  if (!p.source_url) open.push("Price not checked");
-  if (!p.location_exact) open.push("Exact address");
-  return { state: fails.length ? "miss" : open.length ? "check" : "match", fails, open };
+  const g = bestGym(p);
+  if (req("gym_near") && (!g.ok.length || (req("gym_equipment") && !g.ok.some(x => x.equipment === "yes")))) fails.push("No barbell gym close by");
+  return { state: fails.length ? "miss" : "match", fails };
 }
 
 function visible() {
@@ -59,37 +55,45 @@ function tip(p) {
 
 function card({ p, e }, i) {
   const s = $("speed").value, b = p.bike_netflix?.[s], g = bestGym(p), t = p.trails?.[0];
-  const states = { match: "Match", check: "Not confirmed: " + e.open.join(", ").toLowerCase(), miss: "Near miss: " + e.fails.join(", ").toLowerCase() };
+  const states = { match: "Fits your limits", miss: "Near miss: " + e.fails.join(", ").toLowerCase() };
   const rent = p.rent_low ? `${money(p.rent_low)}&ndash;${money(p.rent_monthly)}` : money(p.rent_monthly);
   const shown = g.top || nearestGym(p);
-  const gymText = shown ? `${shown.mi} mi, ${esc(shown.name)}${shown.on_way ? ", on the way" : ""}. ${shown.note ? esc(shown.note) : shown.equipment === "unknown" ? "Equipment unknown" : ""}` : "None within 3 mi";
-  const building = p.building_gym ? `In the building: ${esc(p.building_gym)}. ` : "";
-  const link = safeUrl(p.source_url);
-  return `<button type="button" class="card ${p === active ? "on" : ""}" data-i="${DATA.places.indexOf(p)}">
-    <div class="head"><div><div class="name">${esc(p.name)}</div><div class="city">${esc(p.city)}${p.location_exact ? "" : ", approximate location"}${p.furnished ? ", furnished" : ""}</div></div>
+  const gymText = shown ? `${shown.mi} mi, ${esc(shown.name)}${shown.on_way ? ", on the way" : ""}. ${shown.note ? esc(shown.note) : "Equipment not published"}` : "None within 3 mi";
+  const site = safeUrl(p.website), listing = safeUrl(p.source_url);
+  const size = [`${p.beds} bed`, p.baths && `${p.baths} bath`, p.sqft && `${p.sqft} sq ft`].filter(Boolean).join(", ");
+  const links = [site && `<a href="${esc(site)}" target="_blank" rel="noopener">Website</a>`, listing && listing !== site && `<a href="${esc(listing)}" target="_blank" rel="noopener">${esc(p.source_site)}</a>`].filter(Boolean).join(" · ");
+  return `<div class="card ${p === active ? "on" : ""}" tabindex="0" data-i="${DATA.places.indexOf(p)}">
+    <div class="head"><div><div class="name"><a href="${esc(site || listing || "#")}" target="_blank" rel="noopener">${esc(p.name)}</a></div><div class="city">${p.address ? esc(p.address.replace(/, CA$/, "")) : esc(p.city) + ", area only. The exact address is private"}${p.furnished ? ", furnished" : ""}</div></div>
     <div><div class="price">${rent}</div><div class="each">${money(low(p) / 2)} each</div></div></div>
     <span class="status ${e.state}">${esc(states[e.state])}</span>
     <div class="rows">
-      <div><span>Netflix</span><span class="${b && req("max_bike_netflix_min") && b.min > req("max_bike_netflix_min").value ? "fail" : ""}">${netflixText(p)}</span></div>
+      <div><span>Netflix</span><span>${netflixText(p)}${b && req("max_bike_netflix_min") && b.min > req("max_bike_netflix_min").value ? ". Bike is over your 1 hour goal" : ""}</span></div>
       <div><span>Palantir</span><span>${palantirText(p)}</span></div>
-      <div><span>Gym</span><span>${building}${gymText}</span></div>
+      <div><span>Size</span><span>${esc(size)}</span></div>
+      <div><span>Gym</span><span>${gymText}</span></div>
+      ${p.building_gym ? `<div><span>In building</span><span>Gym: ${esc(p.building_gym)}</span></div>` : ""}
       <div><span>Trail</span><span>${t ? `${t.mi} mi, ${esc(t.name)}` : "None found"}</span></div>
+      ${p.laundry ? `<div><span>Laundry</span><span>${esc(p.laundry)}</span></div>` : ""}
+      ${p.available_date ? `<div><span>Open</span><span>${esc(p.available_date)}</span></div>` : ""}
     </div>
     ${p.amenities?.length ? `<div class="nice">${p.amenities.map(esc).join(" · ")}</div>` : ""}
     ${p.rent_note ? `<div class="nice">${esc(p.rent_note)}</div>` : ""}
-    <div class="nice">${link ? `<a href="${esc(link)}" target="_blank" rel="noopener">${esc(p.source_site)}</a>` : esc(p.source_site)}</div>
-  </button>`;
+    <div class="nice">${links}${p.seen_on ? ` · Checked ${esc(p.seen_on)}` : ""}</div>
+  </div>`;
 }
 
 function draw() {
   const rows = visible();
-  const n = { match: 0, check: 0, miss: 0 };
+  const n = { match: 0, miss: 0 };
   DATA.places.forEach(p => n[evaluate(p).state]++);
-  $("counts").innerHTML = `<div><b>${n.match}</b><span>Match</span></div><div><b>${n.check}</b><span>Not confirmed</span></div><div><b>${n.miss}</b><span>Near miss</span></div>`;
+  $("counts").innerHTML = `<div><b>${n.match}</b><span>Fit your limits</span></div><div><b>${n.miss}</b><span>Near miss</span></div>`;
   $("list").innerHTML = rows.length ? rows.map(card).join("") : `<div class="none">No places fit these filters. Turn on near misses to see what is close.</div>`;
   $("list").querySelectorAll(".card").forEach(c => c.addEventListener("click", ev => {
     if (ev.target.closest("a")) return;
     pick(DATA.places[+c.dataset.i], true);
+  }));
+  $("list").querySelectorAll(".card").forEach(c => c.addEventListener("keydown", ev => {
+    if (ev.key === "Enter" && ev.target === c) pick(DATA.places[+c.dataset.i], true);
   }));
   pins.forEach(m => m.remove()); pins.clear();
   for (const { p, e } of rows) {
