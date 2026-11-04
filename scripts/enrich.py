@@ -14,7 +14,7 @@ NETFLIX = {"lat": 37.2596, "lon": -121.9627, "name": "Netflix Los Gatos", "addre
 PALANTIR_ADDRESS = "100 Hamilton Avenue, Palo Alto, CA"
 BBOX = "37.17,-122.25,37.47,-121.82"
 SPEEDS = [16, 20, 25]  # km/h: 9.9, 12.4, and 15.5 mph
-SKIP_GYM = re.compile(r"yoga|pilates|barre|dance|orangetheory|f45|boxing|martial|karate|jiu|taekwon|physical therapy|rehab|massage|cycle|spin|swim|tennis|golf|climb|bouldering|personal train|dojo|lagree|aquatic|mat room|active age|studio|wellness|senior|kids|gymnastics", re.I)
+SKIP_GYM = re.compile(r"yoga|pilates|barre|dance|orangetheory|f45|boxing|martial|karate|jiu|taekwon|physical therapy|rehab|massage|cycle|spin|swim|tennis|golf|climb|bouldering|personal train|dojo|stretch|lagree|aquatic|mat room|active age|studio|wellness|senior|kids|gymnastics", re.I)
 SKIP_TRAIL = re.compile(r"do not enter|connector|access|bmx|spur|cutoff|jump", re.I)
 
 

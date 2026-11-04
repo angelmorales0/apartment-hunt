@@ -45,11 +45,24 @@ function visible() {
   ).sort((a, b) => low(a.p) - low(b.p));
 }
 
+const nearestGym = p => [...(p.gyms || [])].sort((a, b) => a.mi - b.mi)[0];
+function netflixText(p) {
+  const b = p.bike_netflix?.[$("speed").value], c = p.drive_netflix;
+  return [b && `${b.min} min bike`, c && `${c.min} min car`].filter(Boolean).join(", ") || "No route";
+}
+const palantirText = p => p.drive_palantir ? `${p.drive_palantir.min} min car` : "No route";
+
+function tip(p) {
+  const g = bestGym(p).top || nearestGym(p), t = p.trails?.[0];
+  return `<b>${esc(p.name)}</b><br>Netflix: ${netflixText(p)}<br>Palantir: ${palantirText(p)}<br>Gym: ${g ? `${g.mi} mi` : "None within 3 mi"}<br>Trail: ${t ? `${t.mi} mi` : "None found"}`;
+}
+
 function card({ p, e }, i) {
   const s = $("speed").value, b = p.bike_netflix?.[s], g = bestGym(p), t = p.trails?.[0];
   const states = { match: "Match", check: "Not confirmed: " + e.open.join(", ").toLowerCase(), miss: "Near miss: " + e.fails.join(", ").toLowerCase() };
   const rent = p.rent_low ? `${money(p.rent_low)}&ndash;${money(p.rent_monthly)}` : money(p.rent_monthly);
-  const gymText = g.top ? `${esc(g.top.name)}, ${g.top.mi} mi${g.top.on_way ? ", on the way" : ""}. ${g.top.note ? esc(g.top.note) : g.top.equipment === "unknown" ? "Equipment unknown" : ""}` : "None within range";
+  const shown = g.top || nearestGym(p);
+  const gymText = shown ? `${shown.mi} mi, ${esc(shown.name)}${shown.on_way ? ", on the way" : ""}. ${shown.note ? esc(shown.note) : shown.equipment === "unknown" ? "Equipment unknown" : ""}` : "None within 3 mi";
   const building = p.building_gym ? `In the building: ${esc(p.building_gym)}. ` : "";
   const link = safeUrl(p.source_url);
   return `<button type="button" class="card ${p === active ? "on" : ""}" data-i="${DATA.places.indexOf(p)}">
@@ -57,10 +70,10 @@ function card({ p, e }, i) {
     <div><div class="price">${rent}</div><div class="each">${money(low(p) / 2)} each</div></div></div>
     <span class="status ${e.state}">${esc(states[e.state])}</span>
     <div class="rows">
-      <div><span>Netflix</span><span class="${b && req("max_bike_netflix_min") && b.min > req("max_bike_netflix_min").value ? "fail" : ""}">${b ? `${b.min} min bike, ${b.mi} mi` : "No route"}</span></div>
-      <div><span>Palantir</span><span>${p.drive_palantir ? `${p.drive_palantir.min} min drive` : "No route"}${p.bike_palantir ? `, ${p.bike_palantir.min} min bike` : ""}</span></div>
+      <div><span>Netflix</span><span class="${b && req("max_bike_netflix_min") && b.min > req("max_bike_netflix_min").value ? "fail" : ""}">${netflixText(p)}</span></div>
+      <div><span>Palantir</span><span>${palantirText(p)}</span></div>
       <div><span>Gym</span><span>${building}${gymText}</span></div>
-      <div><span>Trail</span><span>${t ? `${esc(t.name)}, ${t.mi} mi` : "None found"}</span></div>
+      <div><span>Trail</span><span>${t ? `${t.mi} mi, ${esc(t.name)}` : "None found"}</span></div>
     </div>
     ${p.amenities?.length ? `<div class="nice">${p.amenities.map(esc).join(" · ")}</div>` : ""}
     ${p.rent_note ? `<div class="nice">${esc(p.rent_note)}</div>` : ""}
@@ -82,6 +95,7 @@ function draw() {
   for (const { p, e } of rows) {
     const cls = `pin ${e.state === "miss" ? "miss" : priceBand(low(p))} ${p.location_exact ? "" : "approx"} ${p === active ? "on" : ""}`;
     const m = L.marker([p.lat, p.lon], { icon: L.divIcon({ className: "", html: `<span class="${cls}">${short(low(p))}</span>`, iconSize: [0, 0] }), title: p.name, zIndexOffset: 2000 - low(p) / 4 }).addTo(map);
+    m.bindTooltip(tip(p), { direction: "top", offset: [0, -22] });
     m.on("click", () => pick(p, false));
     pins.set(p, m);
   }
