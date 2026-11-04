@@ -220,7 +220,7 @@ def main():
                 q, note = gym_quality(g, known)
                 near.append({"name": g["name"], "mi": round(d, 1), "on_way": way, "equipment": q, "note": note, "lat": g["lat"], "lon": g["lon"]})
         rank = {"yes": 0, "unknown": 1, "no": 2}
-        near.sort(key=lambda g: (g["mi"] > 1.5 and not g["on_way"], rank[g["equipment"]], g["mi"]))
+        near.sort(key=lambda g: (rank[g["equipment"]], g["mi"]))
         tr = sorted(({"name": t["name"], "miles": t["miles"], "mi": round(min(miles(pt, p) for p in t["pts"]), 1)} for t in trails), key=lambda t: t["mi"])[:2]
         x.update({
             "lat": round(pt[0], 5), "lon": round(pt[1], 5), "location_exact": exact,

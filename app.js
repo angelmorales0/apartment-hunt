@@ -14,7 +14,7 @@ const KNOWN = new Set(["max_rent", "min_beds", "max_bike_netflix_min", "max_comm
 function req(kind) { return REQ.items.find(r => r.kind === kind && r.value !== null && r.value !== undefined); }
 
 function bestGym(p) {
-  const near = (req("gym_near") || {}).value ?? 1.5;
+  const near = (req("gym_near") || {}).value ?? 3;
   const ok = (p.gyms || []).filter(g => g.mi <= near || g.on_way);
   return { ok, top: ok.find(g => g.equipment === "yes") || ok.find(g => g.equipment === "unknown") || ok[0] };
 }
